@@ -1,49 +1,40 @@
 import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), 'mnist'))
-import model
+import inception.classify_image as classifier
 
-import numpy as np
-import tensorflow as tf
-from flask import Flask, jsonify, render_template, request
-
-x = tf.placeholder("float", [None, 784])
-sess = tf.Session()
-
-# restore trained data
-with tf.variable_scope("regression"):
-    y1, variables = model.regression(x)
-saver = tf.train.Saver(variables)
-saver.restore(sess, "mnist/data/regression.ckpt")
-
-
-with tf.variable_scope("convolutional"):
-    keep_prob = tf.placeholder("float")
-    y2, variables = model.convolutional(x, keep_prob)
-saver = tf.train.Saver(variables)
-saver.restore(sess, "mnist/data/convolutional.ckpt")
-
-
-def regression(input):
-    return sess.run(y1, feed_dict={x: input}).flatten().tolist()
-
-
-def convolutional(input):
-    return sess.run(y2, feed_dict={x: input, keep_prob: 1.0}).flatten().tolist()
+from flask import Flask, render_template, request, redirect, flash
+from werkzeug.utils import secure_filename
 
 
 # webapp
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = '/tmp'
+app.secret_key = 'some_dirty_secret'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
-@app.route('/api/mnist', methods=['POST'])
-def mnist():
-    input = ((255 - np.array(request.json, dtype=np.uint8)) / 255.0).reshape(1, 784)
-    output1 = regression(input)
-    output2 = convolutional(input)
-    return jsonify(results=[output1, output2])
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def main():
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit a empty part without filename
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            filename = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filename)
+            classifier_response = classifier.run_inference_on_image(filename)
+            os.remove(filename)
+            return render_template('index.html', response=classifier_response)
     return render_template('index.html')

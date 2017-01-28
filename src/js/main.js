@@ -1,60 +1,60 @@
 /* global $ */
 class Main {
     constructor() {
-        this.canvas = document.getElementById('main');
+        //this.canvas = document.getElementById('main');
         this.input = document.getElementById('input');
-        this.canvas.width  = 449; // 16 * 28 + 1
-        this.canvas.height = 449; // 16 * 28 + 1
-        this.ctx = this.canvas.getContext('2d');
-        this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
-        this.canvas.addEventListener('mouseup',   this.onMouseUp.bind(this));
-        this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+        //this.canvas.width  = 449; // 16 * 28 + 1
+        //this.canvas.height = 449; // 16 * 28 + 1
+        //this.ctx = this.canvas.getContext('2d');
+        //this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
+        //this.canvas.addEventListener('mouseup',   this.onMouseUp.bind(this));
+        //this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
         this.initialize();
     }
-    initialize() {
-        this.ctx.fillStyle = '#FFFFFF';
-        this.ctx.fillRect(0, 0, 449, 449);
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeRect(0, 0, 449, 449);
-        this.ctx.lineWidth = 0.05;
-        for (var i = 0; i < 27; i++) {
-            this.ctx.beginPath();
-            this.ctx.moveTo((i + 1) * 16,   0);
-            this.ctx.lineTo((i + 1) * 16, 449);
-            this.ctx.closePath();
-            this.ctx.stroke();
-
-            this.ctx.beginPath();
-            this.ctx.moveTo(  0, (i + 1) * 16);
-            this.ctx.lineTo(449, (i + 1) * 16);
-            this.ctx.closePath();
-            this.ctx.stroke();
-        }
-        this.drawInput();
-        $('#output td').text('').removeClass('success');
-    }
-    onMouseDown(e) {
-        this.canvas.style.cursor = 'default';
-        this.drawing = true;
-        this.prev = this.getPosition(e.clientX, e.clientY);
-    }
-    onMouseUp() {
-        this.drawing = false;
-        this.drawInput();
-    }
-    onMouseMove(e) {
-        if (this.drawing) {
-            var curr = this.getPosition(e.clientX, e.clientY);
-            this.ctx.lineWidth = 16;
-            this.ctx.lineCap = 'round';
-            this.ctx.beginPath();
-            this.ctx.moveTo(this.prev.x, this.prev.y);
-            this.ctx.lineTo(curr.x, curr.y);
-            this.ctx.stroke();
-            this.ctx.closePath();
-            this.prev = curr;
-        }
-    }
+    //initialize() {
+    //    this.ctx.fillStyle = '#FFFFFF';
+    //    this.ctx.fillRect(0, 0, 449, 449);
+    //    this.ctx.lineWidth = 1;
+    //    this.ctx.strokeRect(0, 0, 449, 449);
+    //    this.ctx.lineWidth = 0.05;
+    //    for (var i = 0; i < 27; i++) {
+    //        this.ctx.beginPath();
+    //        this.ctx.moveTo((i + 1) * 16,   0);
+    //        this.ctx.lineTo((i + 1) * 16, 449);
+    //        this.ctx.closePath();
+    //        this.ctx.stroke();
+    //
+    //        this.ctx.beginPath();
+    //        this.ctx.moveTo(  0, (i + 1) * 16);
+    //        this.ctx.lineTo(449, (i + 1) * 16);
+    //        this.ctx.closePath();
+    //        this.ctx.stroke();
+    //    }
+    //    this.drawInput();
+    //    $('#output td').text('').removeClass('success');
+    //}
+    //onMouseDown(e) {
+    //    this.canvas.style.cursor = 'default';
+    //    this.drawing = true;
+    //    this.prev = this.getPosition(e.clientX, e.clientY);
+    //}
+    //onMouseUp() {
+    //    this.drawing = false;
+    //    this.drawInput();
+    //}
+    //onMouseMove(e) {
+    //    if (this.drawing) {
+    //        var curr = this.getPosition(e.clientX, e.clientY);
+    //        this.ctx.lineWidth = 16;
+    //        this.ctx.lineCap = 'round';
+    //        this.ctx.beginPath();
+    //        this.ctx.moveTo(this.prev.x, this.prev.y);
+    //        this.ctx.lineTo(curr.x, curr.y);
+    //        this.ctx.stroke();
+    //        this.ctx.closePath();
+    //        this.prev = curr;
+    //    }
+    //}
     getPosition(clientX, clientY) {
         var rect = this.canvas.getBoundingClientRect();
         return {
@@ -62,7 +62,7 @@ class Main {
             y: clientY - rect.top
         };
     }
-    drawInput() {
+    drawInput(input) {
         var ctx = this.input.getContext('2d');
         var img = new Image();
         img.onload = () => {
@@ -82,38 +82,12 @@ class Main {
                 return;
             }
             $.ajax({
-                url: '/api/mnist',
+                url: '/api/inception_v3',
                 method: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(inputs),
                 success: (data) => {
-                    for (let i = 0; i < 2; i++) {
-                        var max = 0;
-                        var max_index = 0;
-                        for (let j = 0; j < 10; j++) {
-                            var value = Math.round(data.results[i][j] * 1000);
-                            if (value > max) {
-                                max = value;
-                                max_index = j;
-                            }
-                            var digits = String(value).length;
-                            for (var k = 0; k < 3 - digits; k++) {
-                                value = '0' + value;
-                            }
-                            var text = '0.' + value;
-                            if (value > 999) {
-                                text = '1.000';
-                            }
-                            $('#output tr').eq(j + 1).find('td').eq(i).text(text);
-                        }
-                        for (let j = 0; j < 10; j++) {
-                            if (j === max_index) {
-                                $('#output tr').eq(j + 1).find('td').eq(i).addClass('success');
-                            } else {
-                                $('#output tr').eq(j + 1).find('td').eq(i).removeClass('success');
-                            }
-                        }
-                    }
+                    $('#output tr').eq(j + 1).find('td').eq(i).text(data).addClass('success');
                 }
             });
         };
@@ -125,5 +99,27 @@ $(() => {
     var main = new Main();
     $('#clear').click(() => {
         main.initialize();
+    });
+
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('#imageHolder').attr('src', e.target.result);
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    $("#inputImage").change(function(){
+        readURL(this);
+        main.drawInput(this);
+    });
+
+    $('#clear').click(() => {
+        $('#imageHolder').attr('src', null)
+        $('#inputImage').val('');
     });
 });
