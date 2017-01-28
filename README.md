@@ -16,7 +16,11 @@
 
     $ pip install -r requirements.txt
     $ npm install
-    $ gunicorn main:app --log-file=-
+    $ gunicorn main:app --reload --bind=192.168.1.7:8000
+
+    Or run classifier process only:
+
+    $ python ./inception/classify_image.py  --model_dir=/home/frateant/codebase/ftraian/deep-learning/inception_v3
 
 
 ### Deploy to Heroku ###

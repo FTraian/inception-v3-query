@@ -188,7 +188,7 @@ def run_inference_on_image(image):
     Nothing
     """
     print('Running on image: ' + image)
-    FLAGS.model_dir = '/home/frateant/codebase/ftraian/deep-learning/inception_v3'
+    FLAGS.model_dir = './inception/model'
     if not tf.gfile.Exists(image):
         tf.logging.fatal('File does not exist %s', image)
     image_data = tf.gfile.FastGFile(image, 'rb').read()
@@ -214,13 +214,6 @@ def maybe_download_and_extract():
     statinfo = os.stat(filepath)
     print('Succesfully downloaded', filename, statinfo.st_size, 'bytes.')
   tarfile.open(filepath, 'r:gz').extractall(dest_directory)
-
-
-def main(_):
-    # maybe_download_and_extract()
-    image = (FLAGS.image_file if FLAGS.image_file else
-             os.path.join(FLAGS.model_dir, '/tmp/VLD_7604.jpg'))
-    run_inference_on_image(image)
 
 
 if __name__ == '__main__':
